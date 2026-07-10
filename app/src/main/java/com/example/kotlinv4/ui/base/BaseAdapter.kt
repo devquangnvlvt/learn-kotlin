@@ -1,0 +1,53 @@
+package com.example.kotlinv4.ui.base
+
+import android.annotation.SuppressLint
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewbinding.ViewBinding
+
+
+abstract class BaseAdapter<T, VB : ViewBinding>(private val bindingInflater: (LayoutInflater, ViewGroup, Boolean) -> VB) :
+    RecyclerView.Adapter<BaseAdapter<T, VB>.BaseViewHolder>() {
+
+    val items = kotlin.collections.ArrayList<T>()
+
+    inner class BaseViewHolder(val binding: VB) : RecyclerView.ViewHolder(binding.root) {
+        fun bindItem(item: T, position: Int) {
+            onBind(binding, item, position)
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
+        val binding = bindingInflater(LayoutInflater.from(parent.context), parent, false)
+        return BaseViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+        holder.bindItem(items[position], position)
+    }
+
+    override fun getItemCount() = items.size
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun submitList(list: List<T>) {
+        items.clear()
+        items.addAll(list)
+
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun submitList2(mutableList: MutableList<T>) {
+        items.clear()
+        items.addAll(mutableList)
+
+        notifyDataSetChanged()
+    }
+//    fun submitList3(newList: List<GameLevel>) {
+//        items = newList
+//        notifyDataSetChanged()
+//    }
+
+    protected abstract fun onBind(binding: VB, item: T, position: Int)
+}
