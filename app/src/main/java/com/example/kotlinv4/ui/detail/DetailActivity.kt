@@ -41,7 +41,7 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
     private val layerViewMap = mutableMapOf<String, ImageView>()
 
     private lateinit var navAdapter: NavAdapter
-    private var optionsAdapter: QuantityAdapter? = null
+    private var optionsAdapter: LayerAdapter? = null
     private var colorAdapter: ColorAdapter? = null
 
     override fun inflateBinding(inflater: LayoutInflater): ActivityDetailBinding =
@@ -99,7 +99,7 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
                 || optionsAdapter?.color != color
 
         if (needRebuild) {
-            optionsAdapter = QuantityAdapter(
+            optionsAdapter = LayerAdapter(
                 groupKey = state.groupKey,
                 parts = parts,
                 color = color
