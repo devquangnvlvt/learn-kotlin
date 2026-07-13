@@ -10,7 +10,8 @@ data class CategoryModel(
     val parts: String,
     val colorArray: String,
     val quantity: String,
-    val level: String
+    val level: String,
+    val clearable: Boolean = true   // false = parts bắt buộc, không cho ẩn
 ) {
     val colors: List<String>
         get() = if (colorArray.isBlank()) emptyList() else colorArray.split(",")

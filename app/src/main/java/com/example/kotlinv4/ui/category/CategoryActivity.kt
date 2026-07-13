@@ -54,13 +54,21 @@ class CategoryActivity: BaseActivity<ActivityCategoryBinding>() {
         super.onCreate(savedInstanceState)
         setupRecyclerView()
         observeParts()
-        observeNavigation()   // thêm dòng này
-        viewModel.preloadData()
+        observeNavigation()
+        loadData()
 
         binding.btnBack.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun loadData() {
+        if (!checkNetwork()) {
+            showNoNetworkDialog(onRetry = { loadData() })
+            return
+        }
+        viewModel.preloadData()
     }
     private fun observeNavigation() {
         lifecycleScope.launch {

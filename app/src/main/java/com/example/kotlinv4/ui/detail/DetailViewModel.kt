@@ -28,7 +28,7 @@ class DetailViewModel(
                 CharacterDataRepository.allGroups = it
             }
         }
-
+            // không có data thì thoát
         if (allGroups.isEmpty()) return false
 
         val group = allGroups.find { it.groupKey == groupKey } ?: allGroups.first()

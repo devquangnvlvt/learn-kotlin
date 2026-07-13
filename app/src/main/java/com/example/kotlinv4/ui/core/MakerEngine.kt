@@ -35,6 +35,9 @@ class MakerEngine(private val group: CategoryWithGroup) {
      */
     private val variantStateMap = mutableMapOf<String, SavedVariantState>()
 
+    // Parts của tab đầu tiên — không có nút clear
+    private var firstParts: String = ""
+
     // ── Init ──────────────────────────────────────────────────────────────────
 
     /**
@@ -56,6 +59,9 @@ class MakerEngine(private val group: CategoryWithGroup) {
         val defaultModel = tabModels.firstOrNull()
         val defaultColor = defaultModel?.colors?.firstOrNull()
 
+        // Ghi nhớ parts của tab đầu tiên để block nút clear
+        firstParts = defaultModel?.parts ?: ""
+
         _state.update {
             it.copy(
                 groupKey = group.groupKey,
@@ -66,6 +72,7 @@ class MakerEngine(private val group: CategoryWithGroup) {
                 selectedImageIndex = 1,
                 optionIndexList = buildIndexList(defaultModel),
                 colorList = defaultModel?.colors.orEmpty(),
+                isClearable = false, // tab đầu tiên không có nút clear
                 renderEvent = defaultModel?.let { m ->
                     RenderEvent(parts = m.parts, imageIndex = 1, color = defaultColor)
                 }
@@ -119,6 +126,8 @@ class MakerEngine(private val group: CategoryWithGroup) {
                 selectedImageIndex = index,
                 optionIndexList = buildIndexList(model),
                 colorList = model.colors,
+                isClearable = model.parts != firstParts,
+                clearedParts = it.clearedParts - model.parts,
                 renderEvent = RenderEvent(parts = model.parts, imageIndex = index, color = color)
             )
         }
@@ -126,18 +135,34 @@ class MakerEngine(private val group: CategoryWithGroup) {
 
     /**
      * User click thumbnail → chọn index ảnh.
-     * Chỉ update index + trigger render, không đụng tab/màu.
+     * Nếu layer đang bị cleared → tự động restore lại.
      */
     fun selectIndex(index: Int) {
         val model = _state.value.selectedModel ?: return
         _state.update {
             it.copy(
                 selectedImageIndex = index,
+                clearedParts = it.clearedParts - model.parts,
                 renderEvent = RenderEvent(
                     parts = model.parts,
                     imageIndex = index,
                     color = it.selectedColor
                 )
+            )
+        }
+    }
+
+    /**
+     * User bấm nút hủy → ẩn layer của parts hiện tại.
+     * Nếu layer đang bị ẩn rồi thì không làm gì thêm.
+     */
+    fun clearLayer(parts: String) {
+        val current = _state.value
+        val newCleared = current.clearedParts + parts
+        _state.update {
+            it.copy(
+                clearedParts = newCleared,
+                renderEvent = null
             )
         }
     }
@@ -188,8 +213,14 @@ data class MakerState(
     val selectedColor: String? = null,
     val selectedImageIndex: Int = 1,
 
+    // Tab hiện tại có cho phép hủy layer không
+    val isClearable: Boolean = true,
+
     // Trigger render ảnh — null = không cần render
-    val renderEvent: RenderEvent? = null
+    val renderEvent: RenderEvent? = null,
+
+    // Parts đã bị user hủy chọn → ẩn layer
+    val clearedParts: Set<String> = emptySet()
 )
 
 /**

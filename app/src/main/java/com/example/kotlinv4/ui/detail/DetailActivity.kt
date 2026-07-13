@@ -41,7 +41,8 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
     private val layerViewMap = mutableMapOf<String, ImageView>()
 
     private lateinit var navAdapter: NavAdapter
-    private var optionsAdapter: LayerAdapter? = null
+
+    private var layerAdapter: LayerAdapter? = null
     private var colorAdapter: ColorAdapter? = null
 
     override fun inflateBinding(inflater: LayoutInflater): ActivityDetailBinding =
@@ -76,6 +77,7 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
                 updateNavRow(state)
                 updateOptionsRow(state)
                 updateColorsRow(state)
+                applyLayerVisibility(state.clearedParts)
                 state.renderEvent?.let { renderLayer(state.groupKey, it) }
             }
         }
@@ -91,24 +93,34 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
     private fun updateOptionsRow(state: MakerState) {
         val parts = state.selectedModel?.parts ?: ""
         val color = state.selectedColor
+        val isCleared = state.clearedParts.contains(parts)
 
-        // Chỉ tạo lại adapter khi parts hoặc color thay đổi
-        // Nếu chỉ đổi index → giữ nguyên adapter, không reset scroll
-        val needRebuild = optionsAdapter == null
-                || optionsAdapter?.parts != parts
-                || optionsAdapter?.color != color
+        val needRebuild = layerAdapter == null
+                || layerAdapter?.parts != parts
+                || layerAdapter?.color != color
+                || layerAdapter?.clearable != state.isClearable
 
         if (needRebuild) {
-            optionsAdapter = LayerAdapter(
+            layerAdapter = LayerAdapter(
                 groupKey = state.groupKey,
                 parts = parts,
-                color = color
+                color = color,
+                clearable = state.isClearable,
+                onClear = {
+                    val currentlyCleared = viewModel.makerState.value.clearedParts.contains(parts)
+                    if (currentlyCleared) {
+                        viewModel.makerState.value.selectedModel?.let { viewModel.onSelectVariant(it) }
+                    } else {
+                        viewModel.onClearLayer(parts)
+                    }
+                }
             ) { index -> viewModel.onSelectIndex(index) }
-            binding.rvOptions.adapter = optionsAdapter
-            optionsAdapter?.submitList(state.optionIndexList)
+            binding.rvOptions.adapter = layerAdapter
+            layerAdapter?.submitList(state.optionIndexList)
         }
 
-        optionsAdapter?.setSelected(state.selectedImageIndex)
+        layerAdapter?.setSelected(state.selectedImageIndex)
+        layerAdapter?.setCleared(isCleared)
     }
 
     private fun updateColorsRow(state: MakerState) {
@@ -136,6 +148,13 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
             }
             binding.frameCharacter.addView(iv)
             layerViewMap[parts] = iv
+        }
+    }
+
+    // ── Apply layer visibility ─────────────────────────────────────────────────
+    private fun applyLayerVisibility(clearedParts: Set<String>) {
+        layerViewMap.forEach { (parts, iv) ->
+            iv.visibility = if (parts in clearedParts) View.INVISIBLE else View.VISIBLE
         }
     }
 

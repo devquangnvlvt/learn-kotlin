@@ -18,8 +18,8 @@ class MainActivity: BaseActivity<ActivityMainBinding>()  {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.btnApi.setOnClickListener {
-            var intent = Intent(this, CategoryActivity::class.java)
-            startActivity(intent)
+            if (!checkNetwork()) return@setOnClickListener
+            startActivity(Intent(this, CategoryActivity::class.java))
         }
     }
 }

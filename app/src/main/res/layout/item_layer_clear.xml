@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardClear"
+    app:cardCornerRadius="8dp"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_margin="4dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp"
+    app:strokeColor="#FF5252"
+    app:cardBackgroundColor="#FFEEEE">
+
+    <ImageView
+        android:id="@+id/imageClear"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_error"
+        android:tint="#FF5252"
+        android:contentDescription="Hủy layer" />
+
+</com.google.android.material.card.MaterialCardView>

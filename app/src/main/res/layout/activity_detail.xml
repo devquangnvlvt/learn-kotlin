@@ -49,11 +49,9 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:background="#EEEEEE"
         android:paddingHorizontal="8dp"
-        tools:listitem="@layout/item_tab" />
+        tools:listitem="@layout/item_nav" />
 
-    <!-- HÀNG 3 (2-trong-1):
-         - Folder Mode : danh sách folder x-y (nav.png, sắp theo zIndex/y)
-         - Item Mode   : danh sách thumbnail 1..quantity (item[0] = nút Back) -->
+    <!-- HÀNG 3: danh sách thumbnail (item đầu = nút hủy layer) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOptions"
         android:layout_width="match_parent"

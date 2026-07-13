@@ -50,6 +50,9 @@ abstract class BaseMakerViewModel : ViewModel() {
     /** User click màu trên rvColors */
     fun onSelectColor(hex: String) = engine.selectColor(hex)
 
+    /** User bấm nút hủy → ẩn layer hiện tại */
+    fun onClearLayer(parts: String) = engine.clearLayer(parts)
+
     /** Kiểm tra engine đã init chưa (tránh crash khi gọi trước initEngine) */
     fun isReady(): Boolean = ::engine.isInitialized
 }
