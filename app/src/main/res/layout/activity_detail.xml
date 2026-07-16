@@ -8,26 +8,38 @@
     android:background="#FFFFFF">
 
     <!-- Thanh trên: nút back -->
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FF0000">
+        android:background="#FF0000"
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <Button
             android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
             android:text="Quay lại" />
-    </FrameLayout>
 
-    <!-- Vùng hiển thị nhân vật ghép layer -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiếp theo" />
+
+    </LinearLayout>
+
+    <!-- Vùng hiển thị nhân vật ghép layer — không set background để capture trong suốt -->
     <FrameLayout
         android:id="@+id/frameCharacter"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#F5F5F5" />
+        android:layout_weight="1" />
 
     <!-- HÀNG 1:  colorArray -->
     <androidx.recyclerview.widget.RecyclerView

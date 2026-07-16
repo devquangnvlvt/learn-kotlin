@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFF0F5"
+    android:padding="12dp">
+
+    <!-- Tabs: 2 nút pill -->
+    <LinearLayout
+        android:id="@+id/rowBtn"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/tabImage"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_tab_inactive"
+            android:gravity="center"
+            android:text="IMAGE"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tabColor"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_tab_active"
+            android:gravity="center"
+            android:text="COULEUR"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+
+    <!-- Grid ảnh (tab IMAGE) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvImage"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="5"
+        tools:listitem="@layout/item_image_background" />
+
+    <!-- Grid màu (tab COULEUR) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvColor"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_marginTop="10dp"
+        android:visibility="visible"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="5"
+        tools:listitem="@layout/item_color_background" />
+
+    <!-- sticker -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSticker"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="5"
+        tools:listitem="@layout/item_sticker" />
+    <!-- Bottom bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_bottom_bar"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <!-- Icon 1: active -->
+        <ImageView
+            android:id="@+id/iconTab1"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="6dp"
+            android:background="@drawable/bg_icon_normal"
+            android:padding="10dp"
+            android:src="@drawable/btn_background"
+            android:tint="#FFFFFF"
+            android:contentDescription="Tab 1" />
+
+        <!-- Icon 2 -->
+        <ImageView
+            android:id="@+id/iconTab2"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="6dp"
+
+            android:padding="10dp"
+            android:src="@drawable/btn_sticker"
+            android:tint="#AAAAAA"
+            android:contentDescription="Tab 2" />
+
+        <!-- Icon 3 -->
+        <ImageView
+            android:id="@+id/iconTab3"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="6dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_placeholder"
+            android:tint="#AAAAAA"
+            android:contentDescription="Tab 3" />
+
+        <!-- Icon 4 -->
+        <ImageView
+            android:id="@+id/iconTab4"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="6dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_placeholder"
+            android:tint="#AAAAAA"
+            android:contentDescription="Tab 4" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -153,6 +153,27 @@ class MakerEngine(private val group: CategoryWithGroup) {
     }
 
     /**
+     * Random chọn 1 index bất kỳ trong layer hiện tại.
+     */
+    fun randomIndex() {
+        val model = _state.value.selectedModel ?: return
+        val list = _state.value.optionIndexList
+        if (list.isEmpty()) return
+        val randomIdx = list.random()
+        _state.update {
+            it.copy(
+                selectedImageIndex = randomIdx,
+                clearedParts = it.clearedParts - model.parts,
+                renderEvent = RenderEvent(
+                    parts = model.parts,
+                    imageIndex = randomIdx,
+                    color = it.selectedColor
+                )
+            )
+        }
+    }
+
+    /**
      * User bấm nút hủy → ẩn layer của parts hiện tại.
      * Nếu layer đang bị ẩn rồi thì không làm gì thêm.
      */

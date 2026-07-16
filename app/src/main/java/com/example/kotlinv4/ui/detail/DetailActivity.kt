@@ -1,5 +1,6 @@
 package com.example.kotlinv4.ui.detail
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +18,9 @@ import com.example.kotlinv4.ui.core.RenderEvent
 import com.example.kotlinv4.ui.utils.CategoryCacheManager
 import com.example.kotlinv4.ui.utils.KeyApp
 import kotlinx.coroutines.launch
-
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import java.io.File
 /**
  * DetailActivity chỉ lo UI:
  * - Observe MakerState từ ViewModel → cập nhật 3 RV + render layer
@@ -60,7 +63,19 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
         observeState()
 
         binding.btnBack.setOnClickListener { finish() }
+
+        binding.btnNext.setOnClickListener{
+            val bitmap = captureFrame()
+            val file = File(cacheDir, "frame_temp.png")
+            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+
+            val intent = Intent(this, DetailEditActivity::class.java).apply {
+                putExtra("FRAME_PATH", file.absolutePath)
+            }
+            startActivity(intent)
+        }
     }
+
 
     // ── Setup adapters (1 lần) ────────────────────────────────────────────────
     private fun setupAdapters() {
@@ -113,7 +128,8 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
                     } else {
                         viewModel.onClearLayer(parts)
                     }
-                }
+                },
+                onRandom = { viewModel.onRandomIndex() }
             ) { index -> viewModel.onSelectIndex(index) }
             binding.rvOptions.adapter = layerAdapter
             layerAdapter?.submitList(state.optionIndexList)
@@ -149,6 +165,24 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
             binding.frameCharacter.addView(iv)
             layerViewMap[parts] = iv
         }
+    }
+
+    // ── Capture frame ─────────────────────────────────────────────────────────
+    private fun captureFrame(): Bitmap {
+        val frame = binding.frameCharacter
+        // Dùng ARGB_8888 + KHÔNG fill background → nền trong suốt
+        val bitmap = Bitmap.createBitmap(frame.width, frame.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        // Chỉ vẽ các ImageView layer (bỏ qua background của frameCharacter)
+        layerViewMap.values.forEach { iv ->
+            if (iv.visibility == View.VISIBLE) {
+                canvas.save()
+                canvas.translate(iv.left.toFloat(), iv.top.toFloat())
+                iv.draw(canvas)
+                canvas.restore()
+            }
+        }
+        return bitmap
     }
 
     // ── Apply layer visibility ─────────────────────────────────────────────────
