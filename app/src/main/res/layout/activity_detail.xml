@@ -42,21 +42,41 @@
         android:layout_weight="1" />
 
     <!-- HÀNG 1:  colorArray -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvColors"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
+        android:background="#FF0000"
         android:orientation="horizontal"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:paddingHorizontal="8dp"
-        android:visibility="visible"
-        tools:listitem="@layout/item_color" />
+        android:gravity="center_vertical">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvColors"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:paddingHorizontal="8dp"
+            android:clipToPadding="false"
+            android:visibility="visible"
+            tools:listitem="@layout/item_color" />
+
+        <Button
+            android:id="@+id/btnTransform"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+
+    </LinearLayout>
+
 
     <!-- HÀNG 2: Chọn nhóm bộ phận  -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvNavs"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="60dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:background="#EEEEEE"
@@ -73,5 +93,12 @@
         android:background="#F0F0F0"
         android:paddingHorizontal="8dp"
         tools:listitem="@layout/item_layer" />
+
+    <include
+        android:id="@+id/layoutTransform"
+        layout="@layout/item_transform"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:visibility="gone" />
 
 </LinearLayout>

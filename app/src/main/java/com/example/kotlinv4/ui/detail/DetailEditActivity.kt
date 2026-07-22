@@ -1,21 +1,28 @@
 package com.example.kotlinv4.ui.detail
 
-import android.content.res.AssetManager
+import android.app.Dialog
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.FrameLayout
+import android.widget.EditText
+import android.widget.ImageView
+import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 import com.example.kotlinv4.R
 import com.example.kotlinv4.databinding.ActivityDetailEditBinding
 import com.example.kotlinv4.ui.base.BaseActivity
+import com.example.kotlinv4.ui.successful.SuccessActivity
 import com.example.kotlinv4.ui.widget.StickerFeature
 import com.example.kotlinv4.ui.widget.StickerView
-import android.graphics.Color
-import android.graphics.drawable.Drawable
-import com.example.kotlinv4.ui.utils.loadBackgroundAssets
-import com.example.kotlinv4.ui.utils.loadStickerAssets
 
 class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
 
@@ -29,12 +36,15 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
         )
     }
 
+    private val viewModel: DetailEditViewModel by viewModels()
+
     override fun inflateBinding(inflater: LayoutInflater): ActivityDetailEditBinding =
         ActivityDetailEditBinding.inflate(inflater)
 
     private lateinit var stickerAdapter: StickerAdapter
     private lateinit var colorAdapter: ColorPickerColorAdapter
     private lateinit var imageAdapter: ColorPickerImageAdapter
+    private lateinit var bubblesAdapter: BubblesAdapter
 
     // Danh sách các StickerView sticker đã add (không tính frame gốc)
     private val stickerViews = mutableListOf<StickerView>()
@@ -44,6 +54,9 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Tải dữ liệu vào ViewModel
+        viewModel.loadData(assets)
 
         // ── Frame gốc (bitmap character) ──────────────────────────────────────
         val path = intent.getStringExtra("FRAME_PATH")
@@ -55,42 +68,60 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
         }
 
         // ── Wrap stickerView trong FrameLayout để stack sticker overlay ────────
-        // Lấy parent (LinearLayout) và vị trí của stickerView trong đó
         val parent = binding.stickerView.parent as android.view.ViewGroup
         val index = parent.indexOfChild(binding.stickerView)
         val lp = binding.stickerView.layoutParams
 
-        // Tạo FrameLayout container cùng LayoutParams với stickerView
         stickerContainer = android.widget.FrameLayout(this).apply {
             layoutParams = lp
             background = binding.stickerView.background
         }
-        // Bỏ background gốc của stickerView (đã chuyển sang container)
         binding.stickerView.background = null
-        // Reset layoutParams của stickerView thành MATCH_PARENT để fill container
         binding.stickerView.layoutParams = android.widget.FrameLayout.LayoutParams(
             android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
             android.widget.FrameLayout.LayoutParams.MATCH_PARENT
         )
-        // Chuyển stickerView từ LinearLayout vào FrameLayout
         parent.removeViewAt(index)
         stickerContainer.addView(binding.stickerView)
         parent.addView(stickerContainer, index)
+
+        // Chạm vào vùng trống của container (không trúng StickerView nào) → deselect hết
+        stickerContainer.setOnTouchListener { _, _ ->
+            deselectAllStickers()
+            binding.stickerView.deselect()
+            false
+        }
 
         // ── Color Picker Panel ────────────────────────────────────────────────
         val panel = binding.layoutColorPicker
 
         colorAdapter = ColorPickerColorAdapter { hex -> updateBackground(hex) }
         panel.rvColor.adapter = colorAdapter
-        colorAdapter.submitList(DEFAULT_COLORS)
+        colorAdapter.submitList(viewModel.defaultColors)
 
         imageAdapter = ColorPickerImageAdapter { fileName -> updateBackground(fileName) }
         panel.rvImage.adapter = imageAdapter
-        imageAdapter.submitList(assets.loadBackgroundAssets())
 
         stickerAdapter = StickerAdapter { fileName -> updateSticker(fileName) }
         panel.rvSticker.adapter = stickerAdapter
-        stickerAdapter.submitList(assets.loadStickerAssets())
+
+        bubblesAdapter = BubblesAdapter { fileName -> showBubbleTextDialog(fileName) }
+        panel.rvBubbles.adapter = bubblesAdapter
+
+        // Observe StateFlow từ ViewModel để cập nhật adapter
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.backgroundList.collect { imageAdapter.submitList(it) }
+                }
+                launch {
+                    viewModel.stickerList.collect { stickerAdapter.submitList(it) }
+                }
+                launch {
+                    viewModel.bubblesList.collect { bubblesAdapter.submitList(it) }
+                }
+            }
+        }
 
         // ── Tab switching ─────────────────────────────────────────────────────
         panel.tabImage.setOnClickListener {
@@ -106,7 +137,6 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
             panel.rvImage.visibility = View.GONE
         }
 
-        // Helper: reset tất cả iconTab về normal, set cái được chọn thành active
         fun setActiveIconTab(activeIndex: Int) {
             val icons = listOf(panel.iconTab1, panel.iconTab2, panel.iconTab3, panel.iconTab4)
             icons.forEachIndexed { i, icon ->
@@ -115,9 +145,9 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
                 )
                 icon.setColorFilter(
                     if (i == activeIndex)
-                        android.graphics.Color.WHITE
+                        Color.WHITE
                     else
-                        android.graphics.Color.parseColor("#AAAAAA")
+                        Color.parseColor("#AAAAAA")
                 )
             }
         }
@@ -128,6 +158,7 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
             panel.rvColor.visibility = View.VISIBLE
             panel.rvImage.visibility = View.GONE
             panel.rvSticker.visibility = View.GONE
+            panel.rvBubbles.visibility = View.GONE
         }
         panel.iconTab2.setOnClickListener {
             setActiveIconTab(1)
@@ -135,10 +166,15 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
             panel.rvSticker.visibility = View.VISIBLE
             panel.rvColor.visibility = View.GONE
             panel.rvImage.visibility = View.GONE
+            panel.rvBubbles.visibility = View.GONE
         }
         panel.iconTab3.setOnClickListener {
             setActiveIconTab(2)
-            // TODO: nội dung tab 3
+            panel.rowBtn.visibility = View.GONE
+            panel.rvSticker.visibility = View.GONE
+            panel.rvColor.visibility = View.GONE
+            panel.rvImage.visibility = View.GONE
+            panel.rvBubbles.visibility = View.VISIBLE
         }
         panel.iconTab4.setOnClickListener {
             setActiveIconTab(3)
@@ -146,14 +182,32 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
         }
 
         binding.btnBack.setOnClickListener { finish() }
+
+        binding.btnNext.setOnClickListener {
+            deselectAllStickers()
+            binding.stickerView.deselect()
+
+            stickerContainer.post {
+                val bitmap = captureFrame()
+                val file = viewModel.saveFrameToCache(cacheDir, bitmap)
+
+                val intent = Intent(this, SuccessActivity::class.java).apply {
+                    putExtra("FRAME_PATH", file.absolutePath)
+                }
+                startActivity(intent)
+            }
+        }
     }
 
-    // ── Add sticker overlay ───────────────────────────────────────────────────
+    // ── Capture ───────────────────────────────────────────────────────────────
+    private fun captureFrame(): Bitmap {
+        val container = stickerContainer
+        val bitmap = Bitmap.createBitmap(container.width, container.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        container.draw(canvas)
+        return bitmap
+    }
 
-    /**
-     * Tạo 1 StickerView mới, set bitmap sticker, add vào stickerContainer.
-     * Deselect tất cả sticker cũ trước khi add cái mới.
-     */
     private fun addStickerView(bitmap: Bitmap) {
         deselectAllStickers()
 
@@ -162,7 +216,6 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
-            // Sticker overlay: tất cả features + nút xóa
             setFeatures(StickerFeature.ALL)
             setStickerBitmap(bitmap)
             onTouchedOutside = { deselectAllStickers() }
@@ -171,7 +224,6 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
         stickerContainer.addView(newSticker)
         stickerViews.add(newSticker)
 
-        // Khi sticker bị xóa khỏi parent (qua handle DELETE) → sync list
         newSticker.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) {}
             override fun onViewDetachedFromWindow(v: View) {
@@ -180,21 +232,19 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
         })
     }
 
-    /** Deselect tất cả StickerView overlay (không ảnh hưởng frame gốc) */
     private fun deselectAllStickers() {
         stickerViews.forEach { it.deselect() }
     }
 
     // ── Background ────────────────────────────────────────────────────────────
-
     private fun updateBackground(value: String) {
         if (value.startsWith("file:///android_asset/")) {
-            val assetPath = value.removePrefix("file:///android_asset/")
+            val assetPath = viewModel.cleanAssetPath(value)
             try {
                 val inputStream = assets.open(assetPath)
                 val drawable = Drawable.createFromStream(inputStream, null)
                 stickerContainer.background = drawable
-                imageAdapter.setSelected(assetPath)
+                imageAdapter.setSelected(value)
                 inputStream.close()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -206,23 +256,48 @@ class DetailEditActivity : BaseActivity<ActivityDetailEditBinding>() {
     }
 
     // ── Sticker ───────────────────────────────────────────────────────────────
-
     private fun updateSticker(value: String) {
-        if (value.startsWith("file:///android_asset/")) {
-            val assetPath = value.removePrefix("file:///android_asset/")
-            try {
-                val inputStream = assets.open(assetPath)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
-                if (bitmap != null) {
-                    addStickerView(bitmap)
-                    stickerAdapter.setSelected(assetPath)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        val bitmap = viewModel.loadBitmapFromAsset(assets, value)
+        if (bitmap != null) {
+            addStickerView(bitmap)
+            stickerAdapter.setSelected(value)
         }
     }
 
+    // ── Bubbles Text Popup & Sticker Generation ──────────────────────────────
+    private fun showBubbleTextDialog(value: String) {
+        val bubbleBitmap = viewModel.loadBitmapFromAsset(assets, value) ?: return
 
+        val dialogView = layoutInflater.inflate(R.layout.dialog_bubble_text, null)
+        val imgBubble = dialogView.findViewById<ImageView>(R.id.imgBubble)
+        val edtBubbleText = dialogView.findViewById<EditText>(R.id.edtBubbleText)
+        val dialogRoot = dialogView.findViewById<View>(R.id.dialogRoot)
+        val bubbleContainer = dialogView.findViewById<View>(R.id.bubbleContainer)
+
+        imgBubble.setImageBitmap(bubbleBitmap)
+
+        val dialog = Dialog(this, android.R.style.Theme_Translucent_NoTitleBar).apply {
+            setContentView(dialogView)
+            window?.setLayout(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        var isCommitted = false
+        fun commitAndDismiss() {
+            if (isCommitted) return
+            isCommitted = true
+            val text = edtBubbleText.text.toString().trim()
+            val compositeBitmap = viewModel.drawTextOnBitmap(bubbleBitmap, text)
+            addStickerView(compositeBitmap)
+            bubblesAdapter.setSelected(value)
+            dialog.dismiss()
+        }
+
+        dialogRoot.setOnClickListener { commitAndDismiss() }
+        bubbleContainer.setOnClickListener { }
+
+        dialog.show()
+    }
 }

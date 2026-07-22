@@ -1,6 +1,5 @@
 package com.example.kotlinv4.ui.category
 
-import android.util.Log
 import com.bumptech.glide.Glide
 import com.example.kotlinv4.ui.utils.KeyApp
 import com.example.kotlinv4.databinding.ItemCategoryBinding

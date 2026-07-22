@@ -23,15 +23,17 @@ class ColorPickerImageAdapter(
 
     override fun onBind(binding: ItemImageBackgroundBinding, item: String, position: Int) {
         Glide.with(binding.imageItem.context)
-            .load(item)                          // "file:///android_asset/background/xxx.png"
+            .load(item)
             .placeholder(R.drawable.ic_placeholder)
             .error(R.drawable.ic_error)
             .centerCrop()
             .into(binding.imageItem)
 
-        var color = item == selectedImage
+        val isSelected = item == selectedImage
 
-//        binding.boxImage.strokeWidth = if (color) 4 else 0
+        binding.boxImage.background = if (isSelected)
+            androidx.core.content.ContextCompat.getDrawable(binding.boxImage.context, R.drawable.bg_item_selected)
+        else null
 
         binding.root.setOnClickListener { onClickImage(item) }
     }

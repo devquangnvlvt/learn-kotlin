@@ -20,6 +20,7 @@ import com.example.kotlinv4.ui.utils.KeyApp
 import kotlinx.coroutines.launch
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.util.Log
 import java.io.File
 /**
  * DetailActivity chỉ lo UI:
@@ -61,6 +62,20 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
 
         setupAdapters()
         observeState()
+        setupTransform()
+
+        binding.btnTransform.setOnClickListener {
+            val panel = binding.layoutTransform.root
+            if (panel.visibility == View.VISIBLE) {
+                panel.visibility = View.GONE
+                binding.rvNavs.visibility = View.VISIBLE
+                binding.rvOptions.visibility = View.VISIBLE
+            } else {
+                panel.visibility = View.VISIBLE
+                binding.rvNavs.visibility = View.GONE
+                binding.rvOptions.visibility = View.GONE
+            }
+        }
 
         binding.btnBack.setOnClickListener { finish() }
 
@@ -77,7 +92,46 @@ class DetailActivity : BaseActivity<ActivityDetailBinding>() {
     }
 
 
-    // ── Setup adapters (1 lần) ────────────────────────────────────────────────
+    // ── Transform controls ────────────────────────────────────────────────────
+    private fun setupTransform() {
+        val t = binding.layoutTransform
+        val step = 8f  // pixel mỗi lần bấm D-pad
+
+        // Lấy ImageView của layer đang active
+        fun activeView(): ImageView? {
+            val parts = viewModel.makerState.value.selectedModel?.parts ?: return null
+            return layerViewMap[parts]
+        }
+
+        t.btnUp.setOnClickListener    { activeView()?.translationY = (activeView()?.translationY ?: 0f) - step }
+        t.btnDown.setOnClickListener  { activeView()?.translationY = (activeView()?.translationY ?: 0f) + step }
+        t.btnLeft.setOnClickListener  { activeView()?.translationX = (activeView()?.translationX ?: 0f) - step }
+        t.btnRight.setOnClickListener { activeView()?.translationX = (activeView()?.translationX ?: 0f) + step }
+
+        t.btnRotateLeft.setOnClickListener  { activeView()?.rotation = (activeView()?.rotation ?: 0f) - 10f }
+        t.btnRotateRight.setOnClickListener { activeView()?.rotation = (activeView()?.rotation ?: 0f) + 10f }
+
+        t.btnReset.setOnClickListener {
+            activeView()?.apply {
+                translationX = 0f
+                translationY = 0f
+                rotation = 0f
+                scaleX = 1f
+                scaleY = 1f
+            }
+        }
+
+        t.seekBarSize.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar, progress: Int, fromUser: Boolean) {
+                // progress 0–100 → scale 0.3x – 2.0x
+                val scale = 0.3f + progress / 100f * 1.7f
+                activeView()?.scaleX = scale
+                activeView()?.scaleY = scale
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar) {}
+        })
+    }
     private fun setupAdapters() {
         // LayoutManager đã set trong XML
         navAdapter = NavAdapter { model -> viewModel.onSelectVariant(model) }

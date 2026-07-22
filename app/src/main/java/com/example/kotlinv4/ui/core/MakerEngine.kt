@@ -92,32 +92,18 @@ class MakerEngine(private val group: CategoryWithGroup) {
     fun selectVariant(model: CategoryModel) {
         val current = _state.value
 
-        // Log state của tất cả các variant đã lưu trước khi xử lý
-        android.util.Log.d("MakerEngine", "=== selectVariant: ${model.parts} ===")
-        android.util.Log.d("MakerEngine", "variantStateMap hiện tại:")
-        if (variantStateMap.isEmpty()) {
-            android.util.Log.d("MakerEngine", "  (trống - chưa có tab nào được lưu)")
-        } else {
-            variantStateMap.forEach { (parts, state) ->
-                android.util.Log.d("MakerEngine", "  [$parts] color=${state.color}, imageIndex=${state.imageIndex}")
-            }
-        }
-
         // Lưu state folder cũ
         current.selectedModel?.let { old ->
             variantStateMap[old.parts] = SavedVariantState(
                 color = current.selectedColor,
                 imageIndex = current.selectedImageIndex
             )
-            android.util.Log.d("MakerEngine", "Lưu state cũ [${old.parts}]: color=${current.selectedColor}, imageIndex=${current.selectedImageIndex}")
         }
 
         // Khôi phục hoặc dùng mặc định
         val saved = variantStateMap[model.parts]
         val color = saved?.color ?: model.colors.firstOrNull()
         val index = saved?.imageIndex ?: 1
-
-        android.util.Log.d("MakerEngine", "Tab mới [${model.parts}]: saved=$saved → color=$color, index=$index")
 
         _state.update {
             it.copy(

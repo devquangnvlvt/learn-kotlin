@@ -6,7 +6,7 @@ import android.content.res.AssetManager
  * Extension functions cho AssetManager — load danh sách file từ assets.
  * Dùng: assets.loadBackgroundAssets() / assets.loadStickerAssets()
  */
-
+// background
 fun AssetManager.loadBackgroundAssets(): List<String> {
     return try {
         list("background")
@@ -15,7 +15,7 @@ fun AssetManager.loadBackgroundAssets(): List<String> {
             ?: emptyList()
     } catch (e: Exception) { emptyList() }
 }
-
+// sticker
 fun AssetManager.loadStickerAssets(): List<String> {
     return try {
         list("sticker")
@@ -24,7 +24,15 @@ fun AssetManager.loadStickerAssets(): List<String> {
             ?: emptyList()
     } catch (e: Exception) { emptyList() }
 }
-
+// bubbles
+fun AssetManager.loadBubblesAssets(): List<String> {
+    return try {
+        list("bubbles")
+            ?.filter { !it.endsWith(".db") }
+            ?.map { "file:///android_asset/bubbles/$it" }
+            ?: emptyList()
+    } catch (e: Exception) { emptyList() }
+}
 /**
  * Generic — load bất kỳ folder nào trong assets.
  * Dùng: assets.loadAssets("background") hoặc assets.loadAssets("sticker")

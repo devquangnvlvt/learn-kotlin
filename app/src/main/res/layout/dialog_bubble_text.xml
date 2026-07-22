@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dialogRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#80000000"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:id="@+id/cardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:layout_marginBottom="100dp"
+        android:background="@android:color/transparent"
+        android:gravity="center">
+
+        <!-- Frame chứa Bubble Image + Text Edit -->
+        <FrameLayout
+            android:id="@+id/bubbleContainer"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:id="@+id/imgBubble"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:contentDescription="Bubble Preview" />
+
+            <EditText
+                android:id="@+id/edtBubbleText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="32dp"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:textColorHint="#888888"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:inputType="textMultiLine"
+                android:imeOptions="actionDone" />
+        </FrameLayout>
+
+
+
+    </LinearLayout>
+
+</FrameLayout>
